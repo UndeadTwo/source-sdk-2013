@@ -60,7 +60,7 @@ public:
 
 	unsigned int PhysicsSolidMaskForEntity( void ) const;
 
-	CHandle<CWeaponRPG>		m_hOwner;
+	CHandle<CBaseEntity>		m_hOwner;
 
 	static CMissile *Create( const Vector &vecOrigin, const QAngle &vecAngles, edict_t *pentOwner );
 
@@ -200,6 +200,8 @@ public:
 	bool	Reload( void );
 	bool	WeaponShouldBeLowered( void );
 	bool	Lower( void );
+
+	bool	IsRPG(void) { return TRUE; }
 
 	virtual void Drop( const Vector &vecVelocity );
 

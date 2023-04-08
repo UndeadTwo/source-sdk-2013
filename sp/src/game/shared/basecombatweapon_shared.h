@@ -213,6 +213,8 @@ public:
 	virtual void			Spawn( void );
 	virtual void			Precache( void );
 
+	bool	IsRPG(void) { return FALSE; }
+
 #ifdef MAPBASE
 	void					SetAmmoFromMapper( float flAmmo, bool bSecondary = false );
 	virtual bool			KeyValue( const char *szKeyName, const char *szValue );

@@ -123,6 +123,27 @@ LINK_ENTITY_TO_CLASS( rpg_missile, CMissile );
 
 class CWeaponRPG;
 
+inline CWeaponRPG *ToWeaponRPG(CBaseEntity *wEntity)
+{
+	if (!wEntity || !wEntity->IsBaseCombatWeapon() || !((CBaseCombatWeapon *)wEntity)->IsRPG())
+		return NULL;
+#if _DEBUG
+	return dynamic_cast<CWeaponRPG *>(wEntity);
+#else
+	return static_cast<CWeaponRPG *>(wEntity);
+#endif
+}
+
+inline const CWeaponRPG *ToWeaponRPG(const CBaseEntity *wEntity)
+{
+	if (!wEntity || !wEntity->IsBaseCombatWeapon())
+		return NULL;
+#if _DEBUG
+	return dynamic_cast<const CWeaponRPG *>(wEntity);
+#else
+	return static_cast<const CWeaponRPG *>(wEntity);
+#endif
+}
 
 //-----------------------------------------------------------------------------
 // Constructor
@@ -331,13 +352,18 @@ void CMissile::ShotDown( void )
 	m_flMarkDeadTime = gpGlobals->curtime + 0.75;
 
 	// Let the RPG start reloading immediately
-	if ( m_hOwner != NULL )
+
+	CWeaponRPG *pWeapon = ToWeaponRPG(m_hOwner);
+
+	if (pWeapon == NULL || !pWeapon->IsRPG())
+		return;
+
+	if (m_hOwner != NULL)
 	{
-		m_hOwner->NotifyRocketDied();
+		pWeapon->NotifyRocketDied();
 		m_hOwner = NULL;
 	}
 }
-
 
 //-----------------------------------------------------------------------------
 // The actual explosion 
@@ -377,9 +403,14 @@ void CMissile::Explode( void )
 		m_hRocketTrail = NULL;
 	}
 
-	if ( m_hOwner != NULL )
+	CWeaponRPG *pWeapon = ToWeaponRPG(m_hOwner);
+
+	if (pWeapon == NULL || !pWeapon->IsRPG())
+		return;
+
+	if (m_hOwner != NULL)
 	{
-		m_hOwner->NotifyRocketDied();
+		pWeapon->NotifyRocketDied();
 		m_hOwner = NULL;
 	}
 
@@ -456,9 +487,14 @@ void CMissile::IgniteThink( void )
 	SetThink( &CMissile::SeekThink );
 	SetNextThink( gpGlobals->curtime );
 
-	if ( m_hOwner && m_hOwner->GetOwner() )
+	CWeaponRPG *pWeapon = ToWeaponRPG(m_hOwner);
+
+	if (pWeapon == NULL || !pWeapon->IsRPG())
+		return;
+
+	if (pWeapon && pWeapon->GetOwner())
 	{
-		CBasePlayer *pPlayer = ToBasePlayer( m_hOwner->GetOwner() );
+		CBasePlayer *pPlayer = ToBasePlayer(pWeapon->GetOwner());
 
 		if ( pPlayer )
 		{
