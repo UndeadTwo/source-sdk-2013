@@ -117,7 +117,8 @@ void CHudHealth::OnThink()
 	if ( local )
 	{
 		// Never below zero
-		newHealth = MAX( local->GetHealth(), 0 );
+		newHealth = MAX(local->GetHealth(), 0);
+		//newHealth = local->GetHealth();
 	}
 
 	// Only update the fade if we've changed health
@@ -139,6 +140,11 @@ void CHudHealth::OnThink()
 	}
 
 	SetDisplayValue(m_iHealth);
+
+	/*C_BasePlayer *player = C_BasePlayer::GetLocalPlayer();
+	int seconds = player->GetRemainingSeconds();
+
+	SetDisplayValue(seconds);*/
 }
 
 //-----------------------------------------------------------------------------

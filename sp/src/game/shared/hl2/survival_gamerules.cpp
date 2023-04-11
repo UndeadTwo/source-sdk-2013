@@ -106,6 +106,7 @@ inline CHalfLife2Survival* HL2SurvivalGameRules()
 REGISTER_GAMERULES_CLASS( CHalfLife2Survival );
 
 BEGIN_NETWORK_TABLE_NOBASE( CHalfLife2Survival, DT_HL2SurvivalGameRules )
+
 END_NETWORK_TABLE()
 
 
@@ -146,7 +147,6 @@ CHalfLife2Survival::CHalfLife2Survival()
 
 void CHalfLife2Survival::Think( void )
 {
-
 }
 
 bool CHalfLife2Survival::IsAllowedToSpawn( CBaseEntity *pEntity )

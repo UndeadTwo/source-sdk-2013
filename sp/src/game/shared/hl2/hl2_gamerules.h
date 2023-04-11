@@ -72,6 +72,8 @@ public:
 	// TEMP:
 	virtual int				Damage_GetTimeBased( void );
 	
+	int						GetRemainingSeconds(void);
+	
 	virtual bool			ShouldCollide( int collisionGroup0, int collisionGroup1 );
 	virtual bool			ShouldUseRobustRadiusDamage(CBaseEntity *pEntity);
 #ifndef CLIENT_DLL
@@ -79,6 +81,19 @@ public:
 	virtual float			GetAutoAimScale( CBasePlayer *pPlayer );
 	virtual float			GetAmmoQuantityScale( int iAmmoIndex );
 	virtual void			LevelInitPreEntity();
+	
+	void					ResetTimer(void);
+	void					SetTimerDuration(int duration);
+	void					AddTimerDuration(int duration);
+
+	float					GetTimerCurrentStart(void) { return m_timer_start; }
+	int						GetTimerCurrentDuration(void) { return m_timer_duration + m_timer_additional_time; }
+
+	int						GetTimerKillIncrement(void);
+	int						GetTimerBossMultiplier(void);
+
+	virtual void			CreateStandardEntities(void);
+
 #endif
 
 #ifdef MAPBASE_VSCRIPT
@@ -88,6 +103,9 @@ public:
 private:
 	// Rules change for the mega physgun
 	CNetworkVar( bool, m_bMegaPhysgun );
+	CNetworkVar(float, m_timer_start);
+	CNetworkVar(int, m_timer_duration);
+	CNetworkVar(int, m_timer_additional_time);
 
 #ifdef CLIENT_DLL
 

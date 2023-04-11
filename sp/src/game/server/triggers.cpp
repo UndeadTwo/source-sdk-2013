@@ -1666,6 +1666,11 @@ bool CChangeLevel::IsEntityInTransition( CBaseEntity *pEntity )
 	{
 		return false;
 	}
+	
+	if (pEntity->ClassMatches("hl2_gamerules"))
+	{
+		return true;
+	}
 
 	// look for a landmark entity		
 	CBaseEntity	*pLandmark = FindLandmark( m_szLandmarkName );

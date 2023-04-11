@@ -356,7 +356,9 @@ void CMissile::ShotDown( void )
 	CWeaponRPG *pWeapon = ToWeaponRPG(m_hOwner);
 
 	if (pWeapon == NULL || !pWeapon->IsRPG())
-		return;
+	{
+		m_hOwner = NULL;
+	}
 
 	if (m_hOwner != NULL)
 	{
@@ -406,7 +408,9 @@ void CMissile::Explode( void )
 	CWeaponRPG *pWeapon = ToWeaponRPG(m_hOwner);
 
 	if (pWeapon == NULL || !pWeapon->IsRPG())
-		return;
+	{
+		m_hOwner = NULL;
+	}
 
 	if (m_hOwner != NULL)
 	{

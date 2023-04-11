@@ -3075,6 +3075,35 @@ void CHL2_Player::Event_KilledOther( CBaseEntity *pVictim, const CTakeDamageInfo
 {
 	BaseClass::Event_KilledOther( pVictim, info );
 
+	CHalfLife2 *pGamerules = HL2GameRules();
+	CBaseCombatCharacter *pCombatCharacter = (CBaseCombatCharacter*)pVictim;
+	if (pCombatCharacter)
+	{
+		if (
+			pCombatCharacter->ClassMatches("npc_zombie*") ||
+			pCombatCharacter->ClassMatches("npc_poisonzombie") ||
+			pCombatCharacter->ClassMatches("npc_fastzombie") ||
+			pCombatCharacter->ClassMatches("npc_antlion") ||
+			pCombatCharacter->ClassMatches("npc_hunter") ||
+			(pCombatCharacter->ClassMatches("npc_combine*") && !pCombatCharacter->ClassMatches("npc_cominegunship")) ||
+			pCombatCharacter->ClassMatches("npc_metropolice") ||
+			pCombatCharacter->ClassMatches("npc_manhack") ||
+			pCombatCharacter->ClassMatches("npc_crow") // Why not
+		)
+		{
+			pGamerules->AddTimerDuration(pGamerules->GetTimerKillIncrement());
+		}
+		else if (
+			pCombatCharacter->ClassMatches("npc_cominegunship") ||
+			pCombatCharacter->ClassMatches("npc_helicopter") ||
+			pCombatCharacter->ClassMatches("npc_strider") ||
+			pCombatCharacter->ClassMatches("npc_antlionguard")
+		)
+		{
+			pGamerules->AddTimerDuration(pGamerules->GetTimerKillIncrement() * pGamerules->GetTimerBossMultiplier());
+		}
+	}
+
 #ifdef HL2_EPISODIC
 
 	CAI_BaseNPC **ppAIs = g_AI_Manager.AccessAIs();

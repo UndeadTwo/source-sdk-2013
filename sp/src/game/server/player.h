@@ -927,6 +927,8 @@ public:
 	IMPLEMENT_NETWORK_VAR_FOR_DERIVED( m_nNextThinkTick );
 	IMPLEMENT_NETWORK_VAR_FOR_DERIVED( m_vecVelocity );
 	IMPLEMENT_NETWORK_VAR_FOR_DERIVED( m_nWaterLevel );
+
+	CNetworkVar(int, m_next_decrement_tick);
 	
 	int						m_nButtons;
 	int						m_afButtonPressed;

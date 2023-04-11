@@ -10265,8 +10265,6 @@ void CBasePlayer::AdjustDrownDmg( int nAmount )
 	}
 }
 
-
-
 #if !defined(NO_STEAM)
 //-----------------------------------------------------------------------------
 // Purpose: 

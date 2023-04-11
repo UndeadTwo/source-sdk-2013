@@ -466,6 +466,7 @@ void CWeaponRPGSMG::PrimaryAttack(void)
 
 	Vector vForward, vRight, vUp;
 
+	pPlayer->EyeVectors(&vForward, &vRight, &vUp);
 	//Fire Rocket
 	Vector	muzzlePoint = pPlayer->Weapon_ShootPosition() + vForward * 12.0f + vRight * 6.0f + vUp * -3.0f;
 

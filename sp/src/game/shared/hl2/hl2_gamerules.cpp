@@ -36,6 +36,16 @@ BEGIN_NETWORK_TABLE_NOBASE( CHalfLife2, DT_HL2GameRules )
 	#else
 		SendPropBool( SENDINFO( m_bMegaPhysgun ) ),
 	#endif
+
+	#ifdef CLIENT_DLL
+			RecvPropFloat(RECVINFO(m_timer_start)),
+			RecvPropInt(RECVINFO(m_timer_duration)),
+			RecvPropInt(RECVINFO(m_timer_additional_time)),
+	#else
+			SendPropFloat(SENDINFO(m_timer_start)),
+			SendPropInt(SENDINFO(m_timer_duration)),
+			SendPropInt(SENDINFO(m_timer_additional_time)),
+	#endif
 END_NETWORK_TABLE()
 
 #if MAPBASE && GAME_DLL
@@ -78,6 +88,7 @@ void CHalfLife2Proxy::InputSetLegacyFlashlight( inputdata_t &inputdata ) { KeyVa
 void CHalfLife2Proxy::InputSetPlayerSquadAutosummon( inputdata_t &inputdata ) { KeyValue("SetPlayerSquadAutosummon", inputdata.value.String()); }
 void CHalfLife2Proxy::InputSetStunstickPickupBehavior( inputdata_t &inputdata ) { KeyValue("SetStunstickPickupBehavior", inputdata.value.String()); }
 void CHalfLife2Proxy::InputSetAllowSPRespawn( inputdata_t &inputdata ) { KeyValue( "SetAllowSPRespawn", inputdata.value.String() ); }
+
 
 //-----------------------------------------------------------------------------
 // Purpose: Cache user entity field values until spawn is called.
@@ -275,6 +286,10 @@ void CHalfLife2Proxy::UpdateOnRemove()
 	END_SEND_TABLE()
 #endif
 
+ConVar	merc_timer_duration("merc_timer_duration", "600", FCVAR_REPLICATED, "mercenaries mode timer duration in seconds");
+ConVar	merc_timer_kill_award("merc_timer_duration", "5", FCVAR_REPLICATED, "mercenaries mode kill award in seconds");
+ConVar	merc_timer_kill_boss_multiplier("merc_timer_kill_boss_multiplier", "6", FCVAR_REPLICATED, "mercenaries mode kill award boss multiplier");
+
 ConVar  physcannon_mega_enabled( "physcannon_mega_enabled", "0", FCVAR_CHEAT | FCVAR_REPLICATED );
 
 // Controls the application of the robus radius damage model.
@@ -465,6 +480,10 @@ ConVar  alyx_darkness_force( "alyx_darkness_force", "0", FCVAR_CHEAT | FCVAR_REP
 	CHalfLife2::CHalfLife2()
 	{
 		m_bMegaPhysgun = false;
+
+		m_timer_start = gpGlobals->curtime;
+		m_timer_duration = merc_timer_duration.GetInt();
+		m_timer_additional_time = 0;
 		
 		m_flLastHealthDropTime = 0.0f;
 		m_flLastGrenadeDropTime = 0.0f;
@@ -1549,6 +1568,14 @@ ConVar  alyx_darkness_force( "alyx_darkness_force", "0", FCVAR_CHEAT | FCVAR_REP
 
 	void CHalfLife2::PlayerThink( CBasePlayer *pPlayer )
 	{
+		if (gpGlobals->curtime > m_timer_start + m_timer_duration + m_timer_additional_time)
+		{
+			// Timeout player?
+
+			pPlayer->TakeDamage(CTakeDamageInfo(pPlayer, pPlayer, 999.f, DMG_GENERIC));
+
+			// TODO: Play Gman clip "Is it really that time again?" on failure.
+		}
 	}
 
 	void CHalfLife2::Think( void )
@@ -1716,6 +1743,62 @@ ConVar  alyx_darkness_force( "alyx_darkness_force", "0", FCVAR_CHEAT | FCVAR_REP
 
 #endif //} !CLIENT_DLL
 
+// Mercenaries timer functions
+int CHalfLife2::GetRemainingSeconds( void )
+{
+	int remainingTime = (m_timer_duration + m_timer_additional_time) - Floor2Int(gpGlobals->curtime - m_timer_start);
+	return remainingTime;
+}
+
+#ifndef CLIENT_DLL
+CON_COMMAND(merc_reset_timer, "Reset the mercenaries timer")
+{
+	CHalfLife2 *pRules = HL2GameRules();
+
+	if (!pRules)
+		return;
+
+	pRules->ResetTimer();
+}
+
+CON_COMMAND(merc_spit_timer, "Display current interal server timer state")
+{
+	CHalfLife2 *pRules = HL2GameRules();
+	ConMsg("Current Internal Values: %f %u", pRules->GetTimerCurrentStart(), pRules->GetTimerCurrentDuration());
+}
+#endif
+
+#ifndef CLIENT_DLL
+void CHalfLife2::ResetTimer(void)
+{
+	m_timer_duration = merc_timer_duration.GetInt();
+
+	m_timer_start = gpGlobals->curtime;
+}
+
+void CHalfLife2::SetTimerDuration(int duration)
+{
+
+	m_timer_duration = duration;
+	ConMsg("Mercenaries timer set to %u, starting at global count %f \n", m_timer_duration, m_timer_start);
+}
+
+void CHalfLife2::AddTimerDuration(int duration)
+{
+	m_timer_additional_time += duration;
+	ConMsg("Mercenaries timer increased by %u to %u, starting at global count %f \n", duration, m_timer_duration + m_timer_additional_time, m_timer_start);
+}
+
+int	CHalfLife2::GetTimerKillIncrement(void)
+{
+	return merc_timer_kill_award.GetInt();
+}
+
+int	CHalfLife2::GetTimerBossMultiplier(void)
+{
+	return merc_timer_kill_boss_multiplier.GetInt();
+}
+#endif
 
 // ------------------------------------------------------------------------------------ //
 // Shared CHalfLife2 implementation.
@@ -1970,6 +2053,22 @@ void CHalfLife2::LevelInitPreEntity()
 	}
 #endif
 	BaseClass::LevelInitPreEntity();
+}
+
+void CHalfLife2::CreateStandardEntities()
+{
+#ifndef CLIENT_DLL
+	CBaseEntity *pEnt;
+	if (gEntList.FindEntityByClassname(NULL, "hl2_gamerules"))
+	{
+		pEnt = gEntList.FindEntityByClassname(NULL, "hl2_gamerules");
+	}
+	else
+	{
+		pEnt = CBaseEntity::Create("hl2_gamerules", vec3_origin, vec3_angle);
+		Assert(pEnt);
+	}
+#endif
 }
 
 //-----------------------------------------------------------------------------
