@@ -33,18 +33,10 @@ REGISTER_GAMERULES_CLASS( CHalfLife2 );
 BEGIN_NETWORK_TABLE_NOBASE( CHalfLife2, DT_HL2GameRules )
 	#ifdef CLIENT_DLL
 		RecvPropBool( RECVINFO( m_bMegaPhysgun ) ),
+		RecvPropBool( RECVINFO( m_bTimerPaused ) ),
 	#else
-		SendPropBool( SENDINFO( m_bMegaPhysgun ) ),
-	#endif
-
-	#ifdef CLIENT_DLL
-			RecvPropFloat(RECVINFO(m_timer_start)),
-			RecvPropInt(RECVINFO(m_timer_duration)),
-			RecvPropInt(RECVINFO(m_timer_additional_time)),
-	#else
-			SendPropFloat(SENDINFO(m_timer_start)),
-			SendPropInt(SENDINFO(m_timer_duration)),
-			SendPropInt(SENDINFO(m_timer_additional_time)),
+		SendPropBool(SENDINFO(m_bMegaPhysgun)),
+		SendPropBool(SENDINFO(m_bTimerPaused)),
 	#endif
 END_NETWORK_TABLE()
 
@@ -60,6 +52,7 @@ BEGIN_DATADESC( CHalfLife2Proxy )
 	DEFINE_FIELD( m_save_PlayerSquadAutosummonDisabled, FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_save_StunstickPickupBehavior, FIELD_INTEGER ),
 	DEFINE_FIELD( m_save_AllowSPRespawn, FIELD_BOOLEAN ),
+	DEFINE_FIELD(m_save_timer_paused, FIELD_BOOLEAN),
 
 	// Inputs
 	DEFINE_INPUTFUNC( FIELD_VOID, "EpisodicOn", InputEpisodicOn ),
@@ -211,6 +204,7 @@ int CHalfLife2Proxy::Save( ISave &save )
 	m_save_StunstickPickupBehavior = HL2GameRules()->GetStunstickPickupBehavior();
 
 	m_save_AllowSPRespawn = HL2GameRules()->AllowSPRespawn();
+	m_save_timer_paused = HL2GameRules()->IsTimerPaused();
 
 	return BaseClass::Save(save);
 }
@@ -240,6 +234,7 @@ int CHalfLife2Proxy::Restore( IRestore &restore )
 	HL2GameRules()->SetStunstickPickupBehavior(m_save_StunstickPickupBehavior);
 
 	HL2GameRules()->SetAllowSPRespawn(m_save_AllowSPRespawn);
+	HL2GameRules()->SetTimerPaused(m_save_timer_paused);
 
 	return base;
 }
@@ -287,8 +282,22 @@ void CHalfLife2Proxy::UpdateOnRemove()
 #endif
 
 ConVar	merc_timer_duration("merc_timer_duration", "600", FCVAR_REPLICATED, "mercenaries mode timer duration in seconds");
-ConVar	merc_timer_kill_award("merc_timer_duration", "5", FCVAR_REPLICATED, "mercenaries mode kill award in seconds");
+ConVar	merc_timer_kill_award("merc_timer_kill_award", "10", FCVAR_REPLICATED, "mercenaries mode kill award in seconds");
 ConVar	merc_timer_kill_boss_multiplier("merc_timer_kill_boss_multiplier", "6", FCVAR_REPLICATED, "mercenaries mode kill award boss multiplier");
+
+#ifndef CLIENT_DLL
+CON_COMMAND(merc_toggle_timer_paused, "Toggles the mercenaries timer on and off.")
+{
+	if (HL2GameRules()->IsTimerPaused())
+	{
+		HL2GameRules()->SetTimerPaused(false);
+	}
+	else
+	{
+		HL2GameRules()->SetTimerPaused(true);
+	}
+}
+#endif
 
 ConVar  physcannon_mega_enabled( "physcannon_mega_enabled", "0", FCVAR_CHEAT | FCVAR_REPLICATED );
 
@@ -480,10 +489,6 @@ ConVar  alyx_darkness_force( "alyx_darkness_force", "0", FCVAR_CHEAT | FCVAR_REP
 	CHalfLife2::CHalfLife2()
 	{
 		m_bMegaPhysgun = false;
-
-		m_timer_start = gpGlobals->curtime;
-		m_timer_duration = merc_timer_duration.GetInt();
-		m_timer_additional_time = 0;
 		
 		m_flLastHealthDropTime = 0.0f;
 		m_flLastGrenadeDropTime = 0.0f;
@@ -1568,7 +1573,9 @@ ConVar  alyx_darkness_force( "alyx_darkness_force", "0", FCVAR_CHEAT | FCVAR_REP
 
 	void CHalfLife2::PlayerThink( CBasePlayer *pPlayer )
 	{
-		if (gpGlobals->curtime > m_timer_start + m_timer_duration + m_timer_additional_time)
+	#ifndef CLIENT_DLL
+		((CHL2_Player*)pPlayer)->AdvanceElapsedTimer(gpGlobals->curtime);
+		if ((CHL2_Player*)pPlayer && ((CHL2_Player*)pPlayer)->GetRemainingSeconds() <= 0)
 		{
 			// Timeout player?
 
@@ -1576,6 +1583,7 @@ ConVar  alyx_darkness_force( "alyx_darkness_force", "0", FCVAR_CHEAT | FCVAR_REP
 
 			// TODO: Play Gman clip "Is it really that time again?" on failure.
 		}
+	#endif
 	}
 
 	void CHalfLife2::Think( void )
@@ -1743,50 +1751,30 @@ ConVar  alyx_darkness_force( "alyx_darkness_force", "0", FCVAR_CHEAT | FCVAR_REP
 
 #endif //} !CLIENT_DLL
 
-// Mercenaries timer functions
-int CHalfLife2::GetRemainingSeconds( void )
-{
-	int remainingTime = (m_timer_duration + m_timer_additional_time) - Floor2Int(gpGlobals->curtime - m_timer_start);
-	return remainingTime;
-}
-
 #ifndef CLIENT_DLL
 CON_COMMAND(merc_reset_timer, "Reset the mercenaries timer")
 {
-	CHalfLife2 *pRules = HL2GameRules();
+	CHL2_Player *pPlayer = (CHL2_Player*)UTIL_GetLocalPlayer();
 
-	if (!pRules)
+	if (!pPlayer)
 		return;
 
-	pRules->ResetTimer();
+	pPlayer->ResetTimer();
 }
 
 CON_COMMAND(merc_spit_timer, "Display current interal server timer state")
 {
-	CHalfLife2 *pRules = HL2GameRules();
-	ConMsg("Current Internal Values: %f %u", pRules->GetTimerCurrentStart(), pRules->GetTimerCurrentDuration());
+	CHL2_Player *pPlayer = (CHL2_Player*)UTIL_GetLocalPlayer();
+	Assert(pPlayer);
+
+	ConMsg("Current Internal Timer Values: CurTime: %f,  Elapsed Time: %f, Duration: %u, Additional Time: %u", gpGlobals->curtime, pPlayer->GetTimerCurrentElapsed(), pPlayer->GetTimerCurrentDuration(), pPlayer->GetAdditionalTime());
 }
 #endif
 
 #ifndef CLIENT_DLL
-void CHalfLife2::ResetTimer(void)
+int CHalfLife2::GetTimerDurationDefault(void)
 {
-	m_timer_duration = merc_timer_duration.GetInt();
-
-	m_timer_start = gpGlobals->curtime;
-}
-
-void CHalfLife2::SetTimerDuration(int duration)
-{
-
-	m_timer_duration = duration;
-	ConMsg("Mercenaries timer set to %u, starting at global count %f \n", m_timer_duration, m_timer_start);
-}
-
-void CHalfLife2::AddTimerDuration(int duration)
-{
-	m_timer_additional_time += duration;
-	ConMsg("Mercenaries timer increased by %u to %u, starting at global count %f \n", duration, m_timer_duration + m_timer_additional_time, m_timer_start);
+	return merc_timer_duration.GetInt();
 }
 
 int	CHalfLife2::GetTimerKillIncrement(void)

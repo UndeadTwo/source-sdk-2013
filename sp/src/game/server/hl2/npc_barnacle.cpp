@@ -27,6 +27,7 @@
 #include "explode.h"
 #include "npc_BaseZombie.h"
 #include "modelentities.h"
+#include "eventqueue.h"
 
 #if HL2_EPISODIC
 #include "npc_antlion.h"
@@ -2090,6 +2091,14 @@ void CNPC_Barnacle::SpawnDeathGibs( void )
 void CNPC_Barnacle::Event_Killed( const CTakeDamageInfo &info )
 {
 	m_OnDeath.FireOutput( info.GetAttacker(), this );
+	
+	// Tell my killer that he got me!
+	if (info.GetAttacker())
+	{
+		info.GetAttacker()->Event_KilledOther(this, info);
+		g_EventQueue.AddEvent(info.GetAttacker(), "KilledNPC", 0.3, this, this);
+	}
+
 	SendOnKilledGameEvent( info );
 
 	AddSolidFlags( FSOLID_NOT_SOLID );
@@ -2166,7 +2175,6 @@ void CNPC_Barnacle::Event_Killed( const CTakeDamageInfo &info )
 
 	SetNextThink( gpGlobals->curtime + 0.1f );
 	SetThink ( &CNPC_Barnacle::WaitTillDead );
-
 	// we deliberately do not call BaseClass::EventKilled
 }
 

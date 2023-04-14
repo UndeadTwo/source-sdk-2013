@@ -1666,11 +1666,6 @@ bool CChangeLevel::IsEntityInTransition( CBaseEntity *pEntity )
 	{
 		return false;
 	}
-	
-	if (pEntity->ClassMatches("hl2_gamerules"))
-	{
-		return true;
-	}
 
 	// look for a landmark entity		
 	CBaseEntity	*pLandmark = FindLandmark( m_szLandmarkName );
@@ -1690,6 +1685,7 @@ bool CChangeLevel::IsEntityInTransition( CBaseEntity *pEntity )
 
 void CChangeLevel::NotifyEntitiesOutOfTransition()
 {
+	ConMsg("Performing level transition now...");
 	CBaseEntity *pEnt = gEntList.FirstEnt();
 	while ( pEnt )
 	{
@@ -1699,6 +1695,7 @@ void CChangeLevel::NotifyEntitiesOutOfTransition()
 			variant_t emptyVariant;
 			if ( !(pEnt->ObjectCaps() & (FCAP_ACROSS_TRANSITION|FCAP_FORCE_TRANSITION)) || !IsEntityInTransition( pEnt ) )
 			{
+				ConMsg("In Transition Boundary: Classname: %s \n", pEnt->GetClassname());
 				pEnt->AcceptInput( "OutsideTransition", this, this, emptyVariant, 0 );
 			}
 			else

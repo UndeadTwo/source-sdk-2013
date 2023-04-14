@@ -1,10 +1,15 @@
+
 #include "cbase.h"
 #include "gamerules.h"
+
 #include "player.h"
-#include "items.h"
+#include "hl2_player.h"
+
 #include "in_buttons.h"
 #include "hl2_gamerules.h"
 #include "engine/IEngineSound.h"
+
+#include "merc_hourglass.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -12,32 +17,6 @@
 ConVar sk_merc_hourglass_small("sk_merc_hourglass_small", "0"); 
 ConVar sk_merc_hourglass_large("sk_merc_hourglass_large", "0"); 
 ConVar sk_merc_hourglass_cutscene("sk_merc_hourglass_cutscene", "0");
-
-enum EMercHourglassTypes
-{
-	SMALL,
-	LARGE,
-	CUTSCENE
-};
-
-class CMercHourglass : public CItem
-{
-public:
-	DECLARE_CLASS(CMercHourglass, CItem);
-
-	void Spawn(void);
-	void Precache(void);
-	bool MyTouch(CBasePlayer *pPlayer);
-
-	void InputSetHourglassType(inputdata_t &inputdata);
-
-
-	float GetItemAmount(void);
-
-	DECLARE_DATADESC();
-private:
-	EMercHourglassTypes m_type;
-};
 
 LINK_ENTITY_TO_CLASS(item_merc_hourglass, CMercHourglass);
 PRECACHE_REGISTER(item_merc_hourglass);
@@ -68,8 +47,8 @@ bool CMercHourglass::MyTouch(CBasePlayer *pPlayer)
 {
 	ConMsg("Merc Hourglass was worth %u seconds \n", GetItemAmount());
 
-	CHalfLife2 *pRules = HL2GameRules();
-	pRules->AddTimerDuration(Floor2Int(GetItemAmount()));
+	CHL2_Player *pHL2Player = (CHL2_Player*)pPlayer;
+	pHL2Player->AddTimerDuration(Floor2Int(GetItemAmount()));
 	
 	CPASAttenuationFilter filter(pPlayer, "HealthKit.Touch");
 	EmitSound(filter, pPlayer->entindex(), "HealthKit.Touch");
@@ -87,12 +66,12 @@ float CMercHourglass::GetItemAmount(void)
 
 	switch (m_type)
 	{
-	case CUTSCENE:
+	case HOURGLASS_CUTSCENE:
 	{
 		returnValue = sk_merc_hourglass_cutscene.GetInt();
 		break;
 	}
-	case LARGE:
+	case HOURGLASS_LARGE:
 	{
 		returnValue = sk_merc_hourglass_large.GetInt();
 		break;

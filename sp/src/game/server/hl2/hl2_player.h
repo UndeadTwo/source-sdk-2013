@@ -128,6 +128,16 @@ public:
 	virtual void		Splash( void );
 	virtual void 		ModifyOrAppendPlayerCriteria( AI_CriteriaSet& set );
 
+	void				ResetTimer(void);
+	void				AdvanceElapsedTimer(float nextCurTime);
+	void				SetTimerDuration(int duration);
+	void				AddTimerDuration(int duration);
+
+	int					GetRemainingSeconds(void);
+	float				GetTimerCurrentElapsed(void) { return m_timer_elapsed; }
+	int					GetAdditionalTime(void) { return m_timer_additional_time; }
+	int					GetTimerCurrentDuration(void) { return m_timer_duration + m_timer_additional_time; }
+
 #ifdef MAPBASE
 	// For the logic_playerproxy output
 	void				SpawnedAtPoint( CBaseEntity *pSpawnPoint );
@@ -449,6 +459,11 @@ private:
 	// If any of this is ever adapted for MP, this method should be replaced with replicating/moving the anim state to the client.
 	CNetworkVar( float, m_flAnimRenderYaw );
 #endif
+
+	CNetworkVar(float, m_timer_elapsed);
+	CNetworkVar(float, m_previous_curtime);
+	CNetworkVar(int, m_timer_duration);
+	CNetworkVar(int, m_timer_additional_time);
 };
 
 

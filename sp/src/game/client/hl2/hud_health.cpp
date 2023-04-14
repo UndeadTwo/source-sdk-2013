@@ -140,11 +140,6 @@ void CHudHealth::OnThink()
 	}
 
 	SetDisplayValue(m_iHealth);
-
-	/*C_BasePlayer *player = C_BasePlayer::GetLocalPlayer();
-	int seconds = player->GetRemainingSeconds();
-
-	SetDisplayValue(seconds);*/
 }
 
 //-----------------------------------------------------------------------------

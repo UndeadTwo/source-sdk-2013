@@ -1874,6 +1874,13 @@ void CNPC_CombineGunship::InputBlindfireOff( inputdata_t &inputdata )
 //-----------------------------------------------------------------------------
 void CNPC_CombineGunship::Event_Killed( const CTakeDamageInfo &info )
 {
+	// Tell my killer that he got me!
+	if (info.GetAttacker())
+	{
+		info.GetAttacker()->Event_KilledOther(this, info);
+		g_EventQueue.AddEvent(info.GetAttacker(), "KilledNPC", 0.3, this, this);
+	}
+
 	m_takedamage = DAMAGE_NO;
 
 	StopCannonBurst();
@@ -1891,6 +1898,7 @@ void CNPC_CombineGunship::Event_Killed( const CTakeDamageInfo &info )
 	SendOnKilledGameEvent( info );
 
 	BeginCrash();
+
 
 	// we deliberately do not call BaseClass::EventKilled
 }

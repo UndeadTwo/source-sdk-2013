@@ -8,6 +8,7 @@
 #include "props.h"
 #include "items.h"
 #include "item_dynamic_resupply.h"
+#include "merc_hourglass.h"
 #ifdef MAPBASE
 #include "point_template.h"
 #endif
@@ -391,6 +392,11 @@ void CItem_ItemCrate::OnBreak( const Vector &vecVelocity, const AngularImpulse &
 		default:
 			break;
 		}
+
+		CMercHourglass* pHourglass = (CMercHourglass*)CreateEntityByName("item_merc_hourglass");
+		pHourglass->SetHourglassType(HOURGLASS_SMALL);
+		pHourglass->SetAbsAngles(GetAbsAngles());
+		pHourglass->SetAbsOrigin(GetAbsOrigin());
 
 		if ( !pSpawn )
 			return;

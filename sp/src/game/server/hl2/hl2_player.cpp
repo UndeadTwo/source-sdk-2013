@@ -45,6 +45,7 @@
 #include "eventqueue.h"
 #include "gamestats.h"
 #include "filters.h"
+#include "hl2_gamerules.h"
 #include "tier0/icommandline.h"
 
 #ifdef HL2_EPISODIC
@@ -520,6 +521,12 @@ BEGIN_DATADESC( CHL2_Player )
 	DEFINE_FIELD( m_flTimeAllSuitDevicesOff, FIELD_TIME ),
 	DEFINE_FIELD( m_fIsSprinting, FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_fIsWalking, FIELD_BOOLEAN ),
+	
+	// HL2:Mercenaries - Timer fields - Needs to be on player to ensure persistence between levels during a run.
+	DEFINE_FIELD( m_timer_elapsed, FIELD_FLOAT),
+	DEFINE_FIELD( m_previous_curtime, FIELD_FLOAT),
+	DEFINE_FIELD( m_timer_duration, FIELD_INTEGER),
+	DEFINE_FIELD(m_timer_additional_time, FIELD_INTEGER),
 
 	/*
 	// These are initialized every time the player calls Activate()
@@ -636,6 +643,11 @@ CHL2_Player::CHL2_Player()
 	m_pPlayerAISquad = 0;
 	m_bSprintEnabled = true;
 
+	m_timer_elapsed = 0;
+	m_previous_curtime = 0;
+	m_timer_duration = HL2GameRules()->GetTimerDurationDefault();
+	m_timer_additional_time = 0;
+
 	m_flArmorReductionTime = 0.0f;
 	m_iArmorReductionFrom = 0;
 }
@@ -672,6 +684,11 @@ CSuitPowerDevice SuitDeviceCustom[] =
 IMPLEMENT_SERVERCLASS_ST(CHL2_Player, DT_HL2_Player)
 	SendPropDataTable(SENDINFO_DT(m_HL2Local), &REFERENCE_SEND_TABLE(DT_HL2Local), SendProxy_SendLocalDataTable),
 	SendPropBool( SENDINFO(m_fIsSprinting) ),
+	
+	SendPropFloat(SENDINFO(m_timer_elapsed)),
+	SendPropFloat(SENDINFO(m_previous_curtime)),
+	SendPropInt(SENDINFO(m_timer_duration)),
+	SendPropInt(SENDINFO(m_timer_additional_time)),
 #ifdef SP_ANIM_STATE
 	SendPropFloat( SENDINFO(m_flAnimRenderYaw), 0, SPROP_NOSCALE ),
 #endif
@@ -691,6 +708,43 @@ void CHL2_Player::Precache( void )
 	PrecacheScriptSound( "HL2Player.TrainUse" );
 	PrecacheScriptSound( "HL2Player.Use" );
 	PrecacheScriptSound( "HL2Player.BurnPain" );
+}
+
+
+// Mercenaries timer functions
+int CHL2_Player::GetRemainingSeconds(void)
+{
+	int remainingTime = (m_timer_duration + m_timer_additional_time) - Floor2Int(m_timer_elapsed);
+	return remainingTime;
+}
+
+void CHL2_Player::ResetTimer(void)
+{
+	m_timer_elapsed = 0;
+}
+
+void CHL2_Player::AdvanceElapsedTimer(float curtime)
+{
+	float curtime_diff = max(curtime - m_previous_curtime, 0.f);
+
+	if (!HL2GameRules()->IsTimerPaused())
+	{
+		m_previous_curtime = curtime;
+	}
+
+	m_timer_elapsed += curtime_diff;
+}
+
+void CHL2_Player::SetTimerDuration(int duration)
+{
+	m_timer_duration = duration;
+	ConMsg("Mercenaries timer set to %u, starting at global count %f \n", m_timer_duration, m_timer_elapsed);
+}
+
+void CHL2_Player::AddTimerDuration(int duration)
+{
+	m_timer_additional_time += duration;
+	ConMsg("Mercenaries timer increased by %u to %u, elapse time is: %f \n", duration, m_timer_duration + m_timer_additional_time, m_timer_elapsed);
 }
 
 //-----------------------------------------------------------------------------
@@ -3074,33 +3128,43 @@ void CHL2_Player::CombineBallSocketed( CPropCombineBall *pCombineBall )
 void CHL2_Player::Event_KilledOther( CBaseEntity *pVictim, const CTakeDamageInfo &info )
 {
 	BaseClass::Event_KilledOther( pVictim, info );
+	ConMsg("Player Killed: %s\n", pVictim->GetClassname());
 
 	CHalfLife2 *pGamerules = HL2GameRules();
 	CBaseCombatCharacter *pCombatCharacter = (CBaseCombatCharacter*)pVictim;
+
 	if (pCombatCharacter)
 	{
 		if (
-			pCombatCharacter->ClassMatches("npc_zombie*") ||
+			pCombatCharacter->ClassMatches("npc_zombie") ||
+			pCombatCharacter->ClassMatches("npc_zombine") ||
 			pCombatCharacter->ClassMatches("npc_poisonzombie") ||
 			pCombatCharacter->ClassMatches("npc_fastzombie") ||
+			pCombatCharacter->ClassMatches("npc_headcrab*") ||
 			pCombatCharacter->ClassMatches("npc_antlion") ||
 			pCombatCharacter->ClassMatches("npc_hunter") ||
 			(pCombatCharacter->ClassMatches("npc_combine*") && !pCombatCharacter->ClassMatches("npc_cominegunship")) ||
 			pCombatCharacter->ClassMatches("npc_metropolice") ||
 			pCombatCharacter->ClassMatches("npc_manhack") ||
-			pCombatCharacter->ClassMatches("npc_crow") // Why not
+			pCombatCharacter->ClassMatches("npc_crow") || // Why not
+			pCombatCharacter->ClassMatches("npc_pigeon") || // Why not
+			pCombatCharacter->ClassMatches("npc_seagull") || // Why not
+			pCombatCharacter->ClassMatches("npc_barnacle") ||
+			pCombatCharacter->ClassMatches("npc_cscanner") ||
+			pCombatCharacter->ClassMatches("npc_clawscanner")
 		)
 		{
-			pGamerules->AddTimerDuration(pGamerules->GetTimerKillIncrement());
+			AddTimerDuration(pGamerules->GetTimerKillIncrement());
 		}
 		else if (
 			pCombatCharacter->ClassMatches("npc_cominegunship") ||
+			pCombatCharacter->ClassMatches("npc_helicopter") ||
 			pCombatCharacter->ClassMatches("npc_helicopter") ||
 			pCombatCharacter->ClassMatches("npc_strider") ||
 			pCombatCharacter->ClassMatches("npc_antlionguard")
 		)
 		{
-			pGamerules->AddTimerDuration(pGamerules->GetTimerKillIncrement() * pGamerules->GetTimerBossMultiplier());
+			AddTimerDuration(pGamerules->GetTimerKillIncrement() * pGamerules->GetTimerBossMultiplier());
 		}
 	}
 

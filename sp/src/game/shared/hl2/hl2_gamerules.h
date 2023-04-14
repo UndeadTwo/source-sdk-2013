@@ -56,6 +56,7 @@ public:
 	bool m_save_PlayerSquadAutosummonDisabled;
 	int m_save_StunstickPickupBehavior;
 	bool m_save_AllowSPRespawn;
+	bool m_save_timer_paused;
 
 	DECLARE_DATADESC();
 #endif
@@ -72,23 +73,19 @@ public:
 	// TEMP:
 	virtual int				Damage_GetTimeBased( void );
 	
-	int						GetRemainingSeconds(void);
-	
 	virtual bool			ShouldCollide( int collisionGroup0, int collisionGroup1 );
 	virtual bool			ShouldUseRobustRadiusDamage(CBaseEntity *pEntity);
+	
+	bool					IsTimerPaused() { return m_bTimerPaused; }
+	void					SetTimerPaused(bool isPaused) { m_bTimerPaused = isPaused; }
 #ifndef CLIENT_DLL
 	virtual bool			ShouldAutoAim( CBasePlayer *pPlayer, edict_t *target );
 	virtual float			GetAutoAimScale( CBasePlayer *pPlayer );
 	virtual float			GetAmmoQuantityScale( int iAmmoIndex );
 	virtual void			LevelInitPreEntity();
 	
-	void					ResetTimer(void);
-	void					SetTimerDuration(int duration);
-	void					AddTimerDuration(int duration);
-
-	float					GetTimerCurrentStart(void) { return m_timer_start; }
-	int						GetTimerCurrentDuration(void) { return m_timer_duration + m_timer_additional_time; }
-
+	// Convar value exposure methods for Mercenaries
+	int						GetTimerDurationDefault(void);
 	int						GetTimerKillIncrement(void);
 	int						GetTimerBossMultiplier(void);
 
@@ -102,10 +99,8 @@ public:
 
 private:
 	// Rules change for the mega physgun
-	CNetworkVar( bool, m_bMegaPhysgun );
-	CNetworkVar(float, m_timer_start);
-	CNetworkVar(int, m_timer_duration);
-	CNetworkVar(int, m_timer_additional_time);
+	CNetworkVar(bool, m_bMegaPhysgun);
+	CNetworkVar(bool, m_bTimerPaused);
 
 #ifdef CLIENT_DLL
 

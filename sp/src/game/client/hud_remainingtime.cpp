@@ -10,7 +10,7 @@
 #include "hud_macros.h"
 #include "view.h"
 
-#include "hl2_gamerules.h"
+#include "c_basehlplayer.h"
 
 #include "iclientmode.h"
 
@@ -50,18 +50,11 @@ protected:
 DECLARE_HUDELEMENT(CHudRemainingTime)
 
 CHudRemainingTime::CHudRemainingTime(const char *pElementName) : CHudElement(pElementName), CHudNumericDisplay(null, "HudRemainingTime") {
-	//No need to show you what's left when you're dead.
 	SetHiddenBits(HIDEHUD_PLAYERDEAD);
-	
-	CGMsg(1, CON_GROUP_MAPBASE_MISC, "Mercenaries: What the fuck why and how");
-
-	//SetMinutes(0);
-	//SetSeconds(0);
 	SetLabelText(L"Time Remaining");
 }
 
 void CHudRemainingTime::Init() {
-	//HOOK_HUD_MESSAGE() Dubious if this is needed, will have to check once up and running.
 	Reset();
 }
 
@@ -71,9 +64,6 @@ void CHudRemainingTime::VidInit() {
 
 void CHudRemainingTime::Reset() {
 	int m_remaining_seconds = -1;
-	//m_bitsDamage = 0;
-
-	//wchar_t *tempString = g_pVGuiLocalize->Find("#Valve_Hud_HEALTH");
 
 	SetLabelText(L"Time Remaining");
 	SetDisplayValue(m_remaining_seconds);
@@ -84,6 +74,6 @@ void CHudRemainingTime::OnThink() {
 }
 
 void CHudRemainingTime::UpdateTime() {
-	CHalfLife2 *gameRules = HL2GameRules();
-	SetDisplayValue(gameRules->GetRemainingSeconds());
+	C_BaseHLPlayer *pPlayer = (C_BaseHLPlayer*)C_BaseHLPlayer::GetLocalPlayer();
+	SetDisplayValue(pPlayer->GetRemainingSeconds());
 }

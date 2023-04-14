@@ -624,6 +624,13 @@ void CCombineDropshipContainer::ThrowFlamingGib( void )
 //-----------------------------------------------------------------------------
 void CCombineDropshipContainer::Event_Killed( const CTakeDamageInfo &info )
 {
+	// Tell my killer that he got me!
+	if (info.GetAttacker())
+	{
+		info.GetAttacker()->Event_KilledOther(this, info);
+		g_EventQueue.AddEvent(info.GetAttacker(), "KilledNPC", 0.3, this, this);
+	}
+
 	if ( GetOwnerEntity() )
 	{
 		CNPC_CombineDropship *pDropship = assert_cast<CNPC_CombineDropship *>(GetOwnerEntity() );

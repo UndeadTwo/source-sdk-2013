@@ -29,6 +29,7 @@
 #include "collisionutils.h"
 #include "props.h"
 #include "EntityFlame.h"
+#include "eventqueue.h"
 #include "decals.h"
 #include "effect_dispatch_data.h"
 #include "te_effect_dispatch.h"
@@ -3779,6 +3780,13 @@ void Chopper_BecomeChunks( CBaseEntity *pChopper )
 //-----------------------------------------------------------------------------
 void CNPC_AttackHelicopter::Event_Killed( const CTakeDamageInfo &info )
 {
+	// Tell my killer that he got me!
+	if (info.GetAttacker())
+	{
+		info.GetAttacker()->Event_KilledOther(this, info);
+		g_EventQueue.AddEvent(info.GetAttacker(), "KilledNPC", 0.3, this, this);
+	}
+
 	if( m_lifeState == LIFE_ALIVE )
 	{
 		m_OnShotDown.FireOutput( this, this );

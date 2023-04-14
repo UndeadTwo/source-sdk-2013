@@ -73,6 +73,12 @@ public:
 	float				m_flSpeedModTime;
 	bool				m_fIsSprinting;
 
+	int					GetRemainingSeconds(void)
+	{
+		int remainingTime = (m_timer_duration + m_timer_additional_time) - Floor2Int(m_timer_elapsed);
+		return remainingTime;
+	}
+
 private:
 	C_BaseHLPlayer( const C_BaseHLPlayer & ); // not defined, not accessible
 	
@@ -86,6 +92,11 @@ private:
 	bool				m_bPlayUseDenySound;		// Signaled by PlayerUse, but can be unset by HL2 ladder code...
 	float				m_flSpeedMod;
 	float				m_flExitSpeedMod;
+
+	float				m_timer_elapsed;
+	float				m_previous_curtime;
+	int					m_timer_duration;
+	int					m_timer_additional_time;
 	
 #ifdef SP_ANIM_STATE
 	// At the moment, we network the render angles since almost none of the player anim stuff is done on the client in SP.
