@@ -1,3 +1,6 @@
+#ifndef MERC_LOGIC_ENTITIES__H
+#define MERC_LOGIC_ENTITIES__H
+
 #include "cbase.h"
 #include "hl2_gamerules.h"
 
@@ -22,3 +25,4 @@ DEFINE_INPUTFUNC(FIELD_BOOLEAN, "Set Pause Timer", InputSetPauseTimer),
 DEFINE_INPUTFUNC(FIELD_VOID, "Toggle Pause Timer", InputTogglePauseTimer),
 
 END_DATADESC()
+#endif

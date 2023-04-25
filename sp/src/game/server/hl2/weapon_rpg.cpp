@@ -123,26 +123,21 @@ LINK_ENTITY_TO_CLASS( rpg_missile, CMissile );
 
 class CWeaponRPG;
 
-inline CWeaponRPG *ToWeaponRPG(CBaseEntity *wEntity)
+// Intended to check m_hOwner and confirm if the WEAPON that owns a Missile is a RPG.
+inline CWeaponRPG* ToWeaponRPG(CBaseEntity *pEntity)
 {
-	if (!wEntity || !wEntity->IsBaseCombatWeapon() || !((CBaseCombatWeapon *)wEntity)->IsRPG())
-		return NULL;
-#if _DEBUG
-	return dynamic_cast<CWeaponRPG *>(wEntity);
-#else
-	return static_cast<CWeaponRPG *>(wEntity);
-#endif
+	if (!pEntity || !pEntity->IsBaseCombatWeapon() || !((CBaseCombatWeapon *)pEntity)->IsRPG())
+		return nullptr;
+
+	return assert_cast<CWeaponRPG *>(pEntity);
 }
 
-inline const CWeaponRPG *ToWeaponRPG(const CBaseEntity *wEntity)
+inline const CWeaponRPG* ToWeaponRPG(const CBaseEntity *pEntity)
 {
-	if (!wEntity || !wEntity->IsBaseCombatWeapon())
-		return NULL;
-#if _DEBUG
-	return dynamic_cast<const CWeaponRPG *>(wEntity);
-#else
-	return static_cast<const CWeaponRPG *>(wEntity);
-#endif
+	if (!pEntity || !pEntity->IsBaseCombatWeapon())
+		return nullptr;
+
+	return assert_cast<const CWeaponRPG *>(pEntity);
 }
 
 //-----------------------------------------------------------------------------
@@ -353,18 +348,14 @@ void CMissile::ShotDown( void )
 
 	// Let the RPG start reloading immediately
 
-	CWeaponRPG *pWeapon = ToWeaponRPG(m_hOwner);
+	CWeaponRPG *pWeapon = ToWeaponRPG( m_hOwner );
 
-	if (pWeapon == NULL || !pWeapon->IsRPG())
-	{
-		m_hOwner = NULL;
-	}
-
-	if (m_hOwner != NULL)
+	if (m_hOwner != NULL && pWeapon != NULL)
 	{
 		pWeapon->NotifyRocketDied();
-		m_hOwner = NULL;
 	}
+
+	m_hOwner = NULL;
 }
 
 //-----------------------------------------------------------------------------
@@ -405,19 +396,14 @@ void CMissile::Explode( void )
 		m_hRocketTrail = NULL;
 	}
 
-	CWeaponRPG *pWeapon = ToWeaponRPG(m_hOwner);
+	CWeaponRPG *pWeapon = ToWeaponRPG( m_hOwner );
 
-	if (pWeapon == NULL || !pWeapon->IsRPG())
-	{
-		m_hOwner = NULL;
-	}
-
-	if (m_hOwner != NULL)
+	if ( pWeapon != NULL )
 	{
 		pWeapon->NotifyRocketDied();
-		m_hOwner = NULL;
 	}
 
+	m_hOwner = nullptr;
 	StopSound( "Missile.Ignite" );
 	UTIL_Remove( this );
 }
@@ -491,12 +477,9 @@ void CMissile::IgniteThink( void )
 	SetThink( &CMissile::SeekThink );
 	SetNextThink( gpGlobals->curtime );
 
-	CWeaponRPG *pWeapon = ToWeaponRPG(m_hOwner);
+	CWeaponRPG *pWeapon = ToWeaponRPG( m_hOwner );
 
-	if (pWeapon == NULL || !pWeapon->IsRPG())
-		return;
-
-	if (pWeapon && pWeapon->GetOwner())
+	if ( pWeapon != NULL && pWeapon->GetOwner() )
 	{
 		CBasePlayer *pPlayer = ToBasePlayer(pWeapon->GetOwner());
 

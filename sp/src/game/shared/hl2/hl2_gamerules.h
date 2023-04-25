@@ -58,6 +58,11 @@ public:
 	bool m_save_AllowSPRespawn;
 	bool m_save_timer_paused;
 
+	float	m_save_timer_elapsed;
+	float	m_save_previous_curtime;
+	int		m_save_timer_duration;
+	int		m_save_timer_additional_time;
+
 	DECLARE_DATADESC();
 #endif
 };
@@ -76,8 +81,11 @@ public:
 	virtual bool			ShouldCollide( int collisionGroup0, int collisionGroup1 );
 	virtual bool			ShouldUseRobustRadiusDamage(CBaseEntity *pEntity);
 	
-	bool					IsTimerPaused() { return m_bTimerPaused; }
+	const bool				IsTimerPaused() { return m_bTimerPaused; }
 	void					SetTimerPaused(bool isPaused) { m_bTimerPaused = isPaused; }
+
+	const int				GetRemainingSeconds(void);
+
 #ifndef CLIENT_DLL
 	virtual bool			ShouldAutoAim( CBasePlayer *pPlayer, edict_t *target );
 	virtual float			GetAutoAimScale( CBasePlayer *pPlayer );
@@ -85,11 +93,20 @@ public:
 	virtual void			LevelInitPreEntity();
 	
 	// Convar value exposure methods for Mercenaries
-	int						GetTimerDurationDefault(void);
-	int						GetTimerKillIncrement(void);
-	int						GetTimerBossMultiplier(void);
+	const int				GetTimerDurationDefault(void);
+	const int				GetTimerKillIncrement(void);
+	const int				GetTimerBossMultiplier(void);
 
 	virtual void			CreateStandardEntities(void);
+
+	void				ResetTimer(void);
+	void				AdvanceElapsedTimer(float nextCurTime);
+	void				SetTimerDuration(int duration);
+	void				AddTimerDuration(int duration);
+
+	const float			GetTimerCurrentElapsed(void) { return m_timer_elapsed; }
+	const int			GetAdditionalTime(void) { return m_timer_additional_time; }
+	const int			GetTimerCurrentDuration(void) { return m_timer_duration + m_timer_additional_time; }
 
 #endif
 
@@ -101,6 +118,10 @@ private:
 	// Rules change for the mega physgun
 	CNetworkVar(bool, m_bMegaPhysgun);
 	CNetworkVar(bool, m_bTimerPaused);
+	CNetworkVar(float, m_timer_elapsed);
+	CNetworkVar(float, m_previous_curtime);
+	CNetworkVar(int, m_timer_duration);
+	CNetworkVar(int, m_timer_additional_time);
 
 #ifdef CLIENT_DLL
 
@@ -166,6 +187,8 @@ private:
 	bool	m_bPlayerSquadAutosummonDisabled;
 	int		m_StunstickPickupBehavior;
 	bool	m_bAllowSPRespawn;
+
+	float	m_fTimerElapsed;
 #endif
 
 	void AdjustPlayerDamageTaken( CTakeDamageInfo *pInfo );
@@ -187,7 +210,5 @@ inline CHalfLife2* HL2GameRules()
 
 	return static_cast<CHalfLife2*>(g_pGameRules);
 }
-
-
 
 #endif // HL2_GAMERULES_H

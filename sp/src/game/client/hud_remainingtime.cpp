@@ -10,7 +10,7 @@
 #include "hud_macros.h"
 #include "view.h"
 
-#include "c_basehlplayer.h"
+#include "hl2_gamerules.h"
 
 #include "iclientmode.h"
 
@@ -74,6 +74,10 @@ void CHudRemainingTime::OnThink() {
 }
 
 void CHudRemainingTime::UpdateTime() {
-	C_BaseHLPlayer *pPlayer = (C_BaseHLPlayer*)C_BaseHLPlayer::GetLocalPlayer();
-	SetDisplayValue(pPlayer->GetRemainingSeconds());
+	CHalfLife2* pGamerules = HL2GameRules();
+
+	if ( pGamerules != null )
+	{
+		SetDisplayValue( pGamerules->GetRemainingSeconds() );
+	}
 }

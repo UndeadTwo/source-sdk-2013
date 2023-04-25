@@ -47,8 +47,8 @@ bool CMercHourglass::MyTouch(CBasePlayer *pPlayer)
 {
 	ConMsg("Merc Hourglass was worth %u seconds \n", GetItemAmount());
 
-	CHL2_Player *pHL2Player = (CHL2_Player*)pPlayer;
-	pHL2Player->AddTimerDuration(Floor2Int(GetItemAmount()));
+	CHalfLife2* pGamerules = HL2GameRules();
+	pGamerules->AddTimerDuration(Floor2Int(GetItemAmount()));
 	
 	CPASAttenuationFilter filter(pPlayer, "HealthKit.Touch");
 	EmitSound(filter, pPlayer->entindex(), "HealthKit.Touch");
