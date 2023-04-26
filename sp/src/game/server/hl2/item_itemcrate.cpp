@@ -393,10 +393,11 @@ void CItem_ItemCrate::OnBreak( const Vector &vecVelocity, const AngularImpulse &
 			break;
 		}
 
-		CMercHourglass* pHourglass = (CMercHourglass*)CreateEntityByName("item_merc_hourglass");
-		pHourglass->SetHourglassType(HOURGLASS_SMALL);
-		pHourglass->SetAbsAngles(GetAbsAngles());
-		pHourglass->SetAbsOrigin(GetAbsOrigin());
+		if (CMercHourglass* pHourglass = static_cast<CMercHourglass*>(CreateNoSpawn("item_merc_hourglass", GetAbsOrigin(), GetAbsAngles())))
+		{
+			pHourglass->SetHourglassType( HOURGLASS_SMALL );
+			pHourglass->Activate();
+		}
 
 		if ( !pSpawn )
 			return;

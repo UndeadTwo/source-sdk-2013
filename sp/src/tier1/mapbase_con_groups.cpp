@@ -52,21 +52,23 @@ static bool g_bIncludeConGroupNames = false;
 ConGroup_t g_ConGroups[CON_GROUP_MAX] = {
 
 	// General
-	DEFINE_CON_GROUP( CON_GROUP_MAPBASE_MISC, "Mapbase misc.", "Messages from misc. Mapbase functions, like map-specific files." ),
-	DEFINE_CON_GROUP( CON_GROUP_PHYSICS, "Physics", "Messages from physics-related events." ),
-	DEFINE_CON_GROUP( CON_GROUP_IO_SYSTEM, "Entity IO", "Messages from I/O events. (these display in developer 2)" ),
-	DEFINE_CON_GROUP( CON_GROUP_RESPONSE_SYSTEM, "Response System", "Messages from the Response System, a library primarily used for NPC speech." ),
+	DEFINE_CON_GROUP(CON_GROUP_MAPBASE_MISC, "Mapbase misc.", "Messages from misc. Mapbase functions, like map-specific files."),
+	DEFINE_CON_GROUP(CON_GROUP_PHYSICS, "Physics", "Messages from physics-related events."),
+	DEFINE_CON_GROUP(CON_GROUP_IO_SYSTEM, "Entity IO", "Messages from I/O events. (these display in developer 2)"),
+	DEFINE_CON_GROUP(CON_GROUP_RESPONSE_SYSTEM, "Response System", "Messages from the Response System, a library primarily used for NPC speech."),
 
 	// Game
-	DEFINE_CON_GROUP( CON_GROUP_NPC_AI, "NPC AI", "Messages from NPC AI, etc. which display at various verbose levels." ),
-	DEFINE_CON_GROUP( CON_GROUP_NPC_SCRIPTS, "NPC scripts", "Messages from scripted_sequence, etc. (these display in developer 2)" ),
-	DEFINE_CON_GROUP( CON_GROUP_SPEECH_AI, "Speech AI", "Messages from response expressers. (these display in developer 1, 2, etc.)" ),
-	DEFINE_CON_GROUP( CON_GROUP_CHOREO, "Choreo", "Messages from choreographed scenes. (these display in developer 1, 2, etc.)" ),
+	DEFINE_CON_GROUP(CON_GROUP_NPC_AI, "NPC AI", "Messages from NPC AI, etc. which display at various verbose levels."),
+	DEFINE_CON_GROUP(CON_GROUP_NPC_SCRIPTS, "NPC scripts", "Messages from scripted_sequence, etc. (these display in developer 2)"),
+	DEFINE_CON_GROUP(CON_GROUP_SPEECH_AI, "Speech AI", "Messages from response expressers. (these display in developer 1, 2, etc.)"),
+	DEFINE_CON_GROUP(CON_GROUP_CHOREO, "Choreo", "Messages from choreographed scenes. (these display in developer 1, 2, etc.)"),
 
 	// VScript
-	DEFINE_CON_GROUP( CON_GROUP_VSCRIPT, "VScript", "Internal messages from VScript not produced by actual scripts." ),
-	DEFINE_CON_GROUP( CON_GROUP_VSCRIPT_PRINT, "VScript print", "Messages from VScript's 'print' function." ),
+	DEFINE_CON_GROUP(CON_GROUP_VSCRIPT, "VScript", "Internal messages from VScript not produced by actual scripts."),
+	DEFINE_CON_GROUP(CON_GROUP_VSCRIPT_PRINT, "VScript print", "Messages from VScript's 'print' function."),
 
+	// 
+	DEFINE_CON_GROUP(CON_GROUP_MERCENARY, "Mod", "Mod debug info and assorted messages"),
 };
 
 int FindConGroup( const char *pszName )

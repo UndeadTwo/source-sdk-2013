@@ -29,9 +29,7 @@ CHudImport::CHudImport(const char *pElementName) : CHudElement(pElementName), Ba
 
 void CHudImport::Paint()
 {
-	SetPaintBorderEnabled(false);
-	surface()->DrawSetTexture(m_nImport);
-	surface()->DrawTexturedRect(2, 2, 128, 128);
+	//Nothing else SHOULD need to be drawn.
 }
 
 static ConVar show_beta("show_beta", "0", 0, "toggles beta icon in upper right corner");

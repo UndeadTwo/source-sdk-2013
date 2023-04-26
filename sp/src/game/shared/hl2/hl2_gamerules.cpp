@@ -60,7 +60,7 @@ BEGIN_DATADESC( CHalfLife2Proxy )
 	DEFINE_FIELD( m_save_PlayerSquadAutosummonDisabled, FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_save_StunstickPickupBehavior, FIELD_INTEGER ),
 	DEFINE_FIELD( m_save_AllowSPRespawn, FIELD_BOOLEAN ),
-	DEFINE_FIELD(m_save_timer_paused, FIELD_BOOLEAN),
+	DEFINE_FIELD( m_save_timer_paused, FIELD_BOOLEAN ),
 
 	// Inputs
 	DEFINE_INPUTFUNC( FIELD_VOID, "EpisodicOn", InputEpisodicOn ),
@@ -76,7 +76,6 @@ BEGIN_DATADESC( CHalfLife2Proxy )
 
 	// HL2:Mercenaries - Timer fields - Needs to be on player to ensure persistence between levels during a run.
 	DEFINE_FIELD(m_save_timer_elapsed, FIELD_FLOAT),
-	DEFINE_FIELD(m_save_previous_curtime, FIELD_FLOAT),
 	DEFINE_FIELD(m_save_timer_duration, FIELD_INTEGER),
 	DEFINE_FIELD(m_save_timer_additional_time, FIELD_INTEGER),
 
@@ -95,7 +94,6 @@ void CHalfLife2Proxy::InputSetLegacyFlashlight( inputdata_t &inputdata ) { KeyVa
 void CHalfLife2Proxy::InputSetPlayerSquadAutosummon( inputdata_t &inputdata ) { KeyValue("SetPlayerSquadAutosummon", inputdata.value.String()); }
 void CHalfLife2Proxy::InputSetStunstickPickupBehavior( inputdata_t &inputdata ) { KeyValue("SetStunstickPickupBehavior", inputdata.value.String()); }
 void CHalfLife2Proxy::InputSetAllowSPRespawn( inputdata_t &inputdata ) { KeyValue( "SetAllowSPRespawn", inputdata.value.String() ); }
-
 
 //-----------------------------------------------------------------------------
 // Purpose: Cache user entity field values until spawn is called.
@@ -220,6 +218,10 @@ int CHalfLife2Proxy::Save( ISave &save )
 	m_save_AllowSPRespawn = HL2GameRules()->AllowSPRespawn();
 	m_save_timer_paused = HL2GameRules()->IsTimerPaused();
 
+	m_save_timer_elapsed = HL2GameRules()->GetTimerCurrentElapsed();
+	m_save_timer_duration = HL2GameRules()->GetTimerCurrentDuration();
+	m_save_timer_additional_time = HL2GameRules()->GetTimerAdditionalTime();
+
 	return BaseClass::Save(save);
 }
 
@@ -248,7 +250,11 @@ int CHalfLife2Proxy::Restore( IRestore &restore )
 	HL2GameRules()->SetStunstickPickupBehavior(m_save_StunstickPickupBehavior);
 
 	HL2GameRules()->SetAllowSPRespawn(m_save_AllowSPRespawn);
-	HL2GameRules()->SetTimerPaused(m_save_timer_paused);
+	HL2GameRules()->SetTimerPaused( m_save_timer_paused );
+
+	HL2GameRules()->SetTimerElapsed( m_save_timer_elapsed );
+	HL2GameRules()->SetTimerDuration( m_save_timer_duration );
+	HL2GameRules()->SetTimerAdditionalTime( m_save_timer_additional_time );
 
 	return base;
 }
@@ -507,6 +513,8 @@ ConVar  alyx_darkness_force( "alyx_darkness_force", "0", FCVAR_CHEAT | FCVAR_REP
 	//-----------------------------------------------------------------------------
 	CHalfLife2::CHalfLife2()
 	{
+		CGMsg(0, CON_GROUP_MAPBASE_MISC, "Initialized HL2GameRules\n");
+
 		m_bMegaPhysgun = false;
 		
 		m_flLastHealthDropTime = 0.0f;

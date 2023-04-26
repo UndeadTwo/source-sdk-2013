@@ -39,6 +39,7 @@ enum ConGroupID_t
 	// 
 	// Mod groups can be inserted here
 	// 
+	CON_GROUP_MERCENARIES,
 
 	//--------------------------
 
