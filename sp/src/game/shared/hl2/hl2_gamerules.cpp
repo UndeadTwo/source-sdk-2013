@@ -206,6 +206,8 @@ bool CHalfLife2Proxy::GetKeyValue( const char *szKeyName, char *szValue, int iMa
 //-----------------------------------------------------------------------------
 int CHalfLife2Proxy::Save( ISave &save )
 {
+	Msg("Saving HL2 Game Rules to proxy... \n");
+
 	m_save_DefaultCitizenType = HL2GameRules()->GetDefaultCitizenType();
 	m_save_PlayerSquadAutosummonDisabled = HL2GameRules()->AutosummonDisabled();
 
@@ -218,7 +220,7 @@ int CHalfLife2Proxy::Save( ISave &save )
 	m_save_AllowSPRespawn = HL2GameRules()->AllowSPRespawn();
 	m_save_timer_paused = HL2GameRules()->IsTimerPaused();
 
-	m_save_timer_elapsed = HL2GameRules()->GetTimerCurrentElapsed();
+	m_save_timer_elapsed = HL2GameRules()->GetTimerElapsed();
 	m_save_timer_duration = HL2GameRules()->GetTimerCurrentDuration();
 	m_save_timer_additional_time = HL2GameRules()->GetTimerAdditionalTime();
 
@@ -233,6 +235,8 @@ int CHalfLife2Proxy::Save( ISave &save )
 //-----------------------------------------------------------------------------
 int CHalfLife2Proxy::Restore( IRestore &restore )
 {
+	Msg("Restoring HL2 Game Rules from proxy... \n");
+
 	int base = BaseClass::Restore(restore);
 
 	HL2GameRules()->SetDefaultCitizenType(m_save_DefaultCitizenType);
@@ -252,10 +256,10 @@ int CHalfLife2Proxy::Restore( IRestore &restore )
 	HL2GameRules()->SetAllowSPRespawn(m_save_AllowSPRespawn);
 	HL2GameRules()->SetTimerPaused( m_save_timer_paused );
 
-	HL2GameRules()->SetTimerElapsed( m_save_timer_elapsed );
 	HL2GameRules()->SetTimerDuration( m_save_timer_duration );
 	HL2GameRules()->SetTimerAdditionalTime( m_save_timer_additional_time );
 
+	HL2GameRules()->SetTimerElapsed( m_save_timer_elapsed );
 	return base;
 }
 
@@ -524,7 +528,6 @@ ConVar  alyx_darkness_force( "alyx_darkness_force", "0", FCVAR_CHEAT | FCVAR_REP
 		m_previous_curtime = 0;
 		m_timer_duration = this->GetTimerDurationDefault();
 		m_timer_additional_time = 0;
-
 #ifdef MAPBASE
 		m_DefaultCitizenType = 0;
 		m_bPlayerSquadAutosummonDisabled = false;
@@ -1625,17 +1628,21 @@ ConVar  alyx_darkness_force( "alyx_darkness_force", "0", FCVAR_CHEAT | FCVAR_REP
 		this->AdvanceElapsedTimer( gpGlobals->curtime );
 
 #ifndef CLIENT_DLL
+		
 		if ( this->GetRemainingSeconds() <= 0 )
 		{
-			// Timeout player?
+			SetTimerPaused(true);
 
-			for ( int iPlayer = 0; iPlayer < gpGlobals->maxClients; iPlayer++ )
+			for ( int iPlayer = 1; iPlayer <= gpGlobals->maxClients; iPlayer++ )
 			{
 				CHL2_Player* pPlayer = (CHL2_Player*) UTIL_PlayerByIndex( iPlayer );
 
-				pPlayer->SetHealth(1);
-				pPlayer->SetArmorValue(0);
-				pPlayer->TakeDamage(CTakeDamageInfo(pPlayer, pPlayer, 10.0f, DMG_CRUSH));
+				if (pPlayer != NULL)
+				{
+					pPlayer->SetHealth(1);
+					pPlayer->SetArmorValue(0);
+					pPlayer->TakeDamage(CTakeDamageInfo(pPlayer, pPlayer, 10.0f, DMG_CRUSH));
+				}
 			}
 
 
@@ -1816,7 +1823,7 @@ CON_COMMAND(merc_spit_timer, "Display current interal server timer state")
 		return;
 	}
 
-	ConMsg("Current Internal Timer Values: CurTime: %f,  Elapsed Time: %f, Duration: %u, Additional Time: %u", gpGlobals->curtime, pGameRules->GetTimerCurrentElapsed(), pGameRules->GetTimerCurrentDuration(), pGameRules->GetAdditionalTime());
+	ConMsg("Current Internal Timer Values: CurTime: %f,  Elapsed Time: %f, Duration: %u, Additional Time: %u", gpGlobals->curtime, pGameRules->GetTimerElapsed(), pGameRules->GetTimerCurrentDuration(), pGameRules->GetAdditionalTime());
 }
 #endif
 
@@ -1836,7 +1843,7 @@ void CHalfLife2::ResetTimer(void)
 
 void CHalfLife2::AdvanceElapsedTimer(float curtime)
 {
-	float curtime_diff = max(curtime - m_previous_curtime, 0.f);
+	float curtime_diff = min( max( curtime - m_previous_curtime, 0.f ), gpGlobals->interval_per_tick );
 
 	if (!HL2GameRules()->IsTimerPaused())
 	{
@@ -2132,12 +2139,13 @@ void CHalfLife2::LevelInitPreEntity()
 void CHalfLife2::CreateStandardEntities()
 {
 #ifndef CLIENT_DLL
+	ConMsg("Creating proxy entity \n");
 	CBaseEntity *pEnt = gEntList.FindEntityByClassname(NULL, "hl2_gamerules");
 	
 	if ( pEnt == NULL )
 	{
-		pEnt = CBaseEntity::Create("hl2_gamerules", vec3_origin, vec3_angle);
-		Assert(pEnt);
+		pEnt = CreateEntityByName("hl2_gamerules");
+		assert(pEnt);
 	}
 #endif
 }

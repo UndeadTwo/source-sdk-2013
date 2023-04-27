@@ -110,9 +110,10 @@ public:
 	void				SetTimerDuration(int duration);
 	void				AddTimerDuration(int duration);
 
-	const float			GetTimerCurrentElapsed(void) { return m_timer_elapsed; }
+	const float			GetTimerElapsed(void) { return m_timer_elapsed; }
 	const int			GetAdditionalTime(void) { return m_timer_additional_time; }
 	const int			GetTimerCurrentDuration(void) { return m_timer_duration + m_timer_additional_time; }
+	const int			GetTimerDuration(void) { return m_timer_duration; }
 
 	void				SetTimerElapsed(float elapsed) { m_timer_elapsed = elapsed; }
 	void				SetTimerAdditionalTime(int additionalTime) { m_timer_additional_time = additionalTime; }

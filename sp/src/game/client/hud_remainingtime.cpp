@@ -50,7 +50,9 @@ protected:
 DECLARE_HUDELEMENT(CHudRemainingTime)
 
 CHudRemainingTime::CHudRemainingTime(const char *pElementName) : CHudElement(pElementName), CHudNumericDisplay(null, "HudRemainingTime") {
-	SetHiddenBits(HIDEHUD_PLAYERDEAD);
+	SetParent(g_pClientMode->GetViewport());
+
+	SetHiddenBits(HIDEHUD_PLAYERDEAD | HIDEHUD_MISCSTATUS);
 	SetLabelText(L"Time Remaining");
 }
 

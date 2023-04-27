@@ -1734,6 +1734,7 @@ void CChangeLevel::WarnAboutActiveLead( void )
 
 void CChangeLevel::ChangeLevelNow( CBaseEntity *pActivator )
 {
+	ConMsg("Changing level now... \n");
 	CBaseEntity	*pLandmark;
 	levellist_t	levels[16];
 

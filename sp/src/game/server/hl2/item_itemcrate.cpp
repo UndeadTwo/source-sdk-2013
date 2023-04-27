@@ -342,6 +342,12 @@ void CItem_ItemCrate::OnBreak( const Vector &vecVelocity, const AngularImpulse &
 	CUtlVector<CBaseEntity*> hNewEntities;
 	CPointTemplate *pTemplate = FindTemplate();
 
+	if (CMercHourglass* pHourglass = static_cast<CMercHourglass*>(CreateNoSpawn("item_merc_hourglass", GetAbsOrigin(), GetAbsAngles())))
+	{
+		pHourglass->SetHourglassType(HOURGLASS_SMALL);
+		pHourglass->Spawn();
+	}
+
 	if (m_CrateType == CRATE_POINT_TEMPLATE)
 	{
 		if (pTemplate && pTemplate->CreateInstance(GetLocalOrigin(), GetLocalAngles(), &hNewEntities))
@@ -391,12 +397,6 @@ void CItem_ItemCrate::OnBreak( const Vector &vecVelocity, const AngularImpulse &
 
 		default:
 			break;
-		}
-
-		if (CMercHourglass* pHourglass = static_cast<CMercHourglass*>(CreateNoSpawn("item_merc_hourglass", GetAbsOrigin(), GetAbsAngles())))
-		{
-			pHourglass->SetHourglassType( HOURGLASS_SMALL );
-			pHourglass->Activate();
 		}
 
 		if ( !pSpawn )
